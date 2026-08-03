@@ -1,0 +1,18 @@
+{
+  "name": "Cab Tracker — Daily Earnings",
+  "short_name": "Cab Tracker",
+  "description": "Track your daily cab income, expenses, and profit in 2 minutes a day.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f9fafb",
+  "theme_color": "#16a34a",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "/vite.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    }
+  ]
+}
