@@ -11,27 +11,29 @@ export default function ReportsScreen({ onBack }: Props) {
   const { user } = useAuth();
   const [tab, setTab] = useState<Tab>('weekly');
   const [entries, setEntries] = useState<DailyEntry[]>([]);
+  const [incomeMap, setIncomeMap] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchEntries();
-  }, []);
+  useEffect(() => { fetchEntries(); }, []);
 
   async function fetchEntries() {
     setLoading(true);
-    const { data } = await supabase
-      .from('daily_entries')
-      .select('*')
-      .eq('user_id', user!.id)
-      .order('date', { ascending: true });
-    setEntries(data || []);
+    const [expRes, incRes] = await Promise.all([
+      supabase.from('daily_entries').select('*').eq('user_id', user!.id).order('date', { ascending: true }),
+      supabase.from('income_entries').select('date,amount').eq('user_id', user!.id),
+    ]);
+    setEntries(expRes.data || []);
+    setIncomeMap(
+      (incRes.data || []).reduce((acc, e) => {
+        acc[e.date] = (acc[e.date] || 0) + Number(e.amount);
+        return acc;
+      }, {} as Record<string, number>)
+    );
     setLoading(false);
   }
 
-  // Group by week
-  const weeklyData = groupByWeek(entries);
-  // Group by month
-  const monthlyData = groupByMonth(entries);
+  const weeklyData = groupByWeek(entries, incomeMap);
+  const monthlyData = groupByMonth(entries, incomeMap);
 
   const chartData = tab === 'weekly' ? weeklyData : monthlyData;
   const totals = chartData.reduce((acc, d) => ({
@@ -41,23 +43,22 @@ export default function ReportsScreen({ onBack }: Props) {
   }), { income: 0, expenses: 0, profit: 0 });
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* Header */}
-      <div className="bg-white shadow-sm px-5 pt-12 pb-4 flex items-center gap-3">
-        <button onClick={onBack} className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center active:bg-gray-200">
-          <ArrowLeft className="w-5 h-5 text-gray-700" />
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
+      <div className="bg-white dark:bg-gray-800 shadow-sm px-5 pt-12 pb-4 flex items-center gap-3">
+        <button onClick={onBack} className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center active:bg-gray-200">
+          <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-200" />
         </button>
-        <h1 className="text-lg font-bold text-gray-900">Reports</h1>
+        <h1 className="text-lg font-bold text-gray-900 dark:text-white">Reports</h1>
       </div>
 
       <div className="flex-1 overflow-y-auto px-5 pb-6">
         {/* Tabs */}
-        <div className="flex bg-gray-100 rounded-xl p-1 mt-5">
+        <div className="flex bg-gray-100 dark:bg-gray-700 rounded-xl p-1 mt-5">
           {(['weekly', 'monthly'] as Tab[]).map(t => (
             <button
               key={t}
               onClick={() => setTab(t)}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${tab === t ? 'bg-white text-green-600 shadow-sm' : 'text-gray-500'}`}
+              className={`flex-1 py-2.5 rounded-lg text-sm font-semibold transition-all ${tab === t ? 'bg-white dark:bg-gray-600 text-green-600 shadow-sm' : 'text-gray-500 dark:text-gray-400'}`}
             >
               {t === 'weekly' ? 'Weekly' : 'Monthly'}
             </button>
@@ -87,8 +88,8 @@ export default function ReportsScreen({ onBack }: Props) {
             </div>
 
             {/* Chart */}
-            <div className="mt-5 bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
-              <h2 className="text-sm font-semibold text-gray-700 mb-4">{tab === 'weekly' ? 'Weekly Comparison' : 'Monthly Comparison'}</h2>
+            <div className="mt-5 bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
+              <h2 className="text-sm font-semibold text-gray-700 dark:text-gray-200 mb-4">{tab === 'weekly' ? 'Weekly Comparison' : 'Monthly Comparison'}</h2>
               <BarChartViz data={chartData} />
             </div>
 
@@ -96,9 +97,9 @@ export default function ReportsScreen({ onBack }: Props) {
             <h2 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mt-5 mb-3">{tab === 'weekly' ? 'Week Breakdown' : 'Month Breakdown'}</h2>
             <div className="space-y-3">
               {chartData.map((d, i) => (
-                <div key={i} className="bg-white rounded-2xl p-4 shadow-sm border border-gray-100">
+                <div key={i} className="bg-white dark:bg-gray-800 rounded-2xl p-4 shadow-sm border border-gray-100 dark:border-gray-700">
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm font-semibold text-gray-700">{d.label}</span>
+                    <span className="text-sm font-semibold text-gray-700 dark:text-gray-200">{d.label}</span>
                     <span className={`text-sm font-bold ${d.profit >= 0 ? 'text-blue-600' : 'text-red-500'}`}>{formatCurrency(d.profit)}</span>
                   </div>
                   <div className="flex gap-4 text-xs">
@@ -156,36 +157,36 @@ function SummaryCard({ label, value, icon, color }: { label: string; value: stri
 
 type ChartPoint = { label: string; income: number; expenses: number; profit: number };
 
-function groupByWeek(entries: DailyEntry[]): ChartPoint[] {
-  const weeks: Record<string, DailyEntry[]> = {};
-  entries.forEach(e => {
-    const weekStart = getWeekStart(e.date);
+function groupByWeek(entries: DailyEntry[], incomeMap: Record<string, number>): ChartPoint[] {
+  const allDates = [...new Set([...entries.map(e => e.date), ...Object.keys(incomeMap)])];
+  const weeks: Record<string, string[]> = {};
+  allDates.forEach(date => {
+    const weekStart = getWeekStart(date);
     if (!weeks[weekStart]) weeks[weekStart] = [];
-    weeks[weekStart].push(e);
+    weeks[weekStart].push(date);
   });
-  return Object.entries(weeks).sort((a, b) => a[0].localeCompare(b[0])).map(([start, items]) => {
-    const income = items.reduce((s, e) => s + Number(e.income), 0);
-    const expenses = items.reduce((s, e) => s + totalExpense(e), 0);
+  return Object.entries(weeks).sort((a, b) => a[0].localeCompare(b[0])).map(([start, dates]) => {
+    const income = dates.reduce((s, d) => s + (incomeMap[d] || 0), 0);
+    const expenses = entries.filter(e => dates.includes(e.date)).reduce((s, e) => s + totalExpense(e), 0);
     const startD = new Date(start + 'T00:00:00');
-    const endD = new Date(startD);
-    endD.setDate(startD.getDate() + 6);
+    const endD = new Date(startD); endD.setDate(startD.getDate() + 6);
     const label = `${startD.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })} - ${endD.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}`;
     return { label, income, expenses, profit: income - expenses };
   });
 }
 
-function groupByMonth(entries: DailyEntry[]): ChartPoint[] {
-  const months: Record<string, DailyEntry[]> = {};
-  entries.forEach(e => {
-    const monthKey = e.date.slice(0, 7);
-    if (!months[monthKey]) months[monthKey] = [];
-    months[monthKey].push(e);
+function groupByMonth(entries: DailyEntry[], incomeMap: Record<string, number>): ChartPoint[] {
+  const allDates = [...new Set([...entries.map(e => e.date), ...Object.keys(incomeMap)])];
+  const months: Record<string, string[]> = {};
+  allDates.forEach(date => {
+    const key = date.slice(0, 7);
+    if (!months[key]) months[key] = [];
+    months[key].push(date);
   });
-  return Object.entries(months).sort((a, b) => a[0].localeCompare(b[0])).map(([key, items]) => {
-    const income = items.reduce((s, e) => s + Number(e.income), 0);
-    const expenses = items.reduce((s, e) => s + totalExpense(e), 0);
-    const d = new Date(key + '-01T00:00:00');
-    const label = d.toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
+  return Object.entries(months).sort((a, b) => a[0].localeCompare(b[0])).map(([key, dates]) => {
+    const income = dates.reduce((s, d) => s + (incomeMap[d] || 0), 0);
+    const expenses = entries.filter(e => dates.includes(e.date)).reduce((s, e) => s + totalExpense(e), 0);
+    const label = new Date(key + '-01T00:00:00').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' });
     return { label, income, expenses, profit: income - expenses };
   });
 }

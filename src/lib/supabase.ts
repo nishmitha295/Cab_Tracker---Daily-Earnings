@@ -5,6 +5,15 @@ export const supabase = createClient(
   import.meta.env.VITE_SUPABASE_ANON_KEY
 );
 
+export type IncomeEntry = {
+  id: string;
+  user_id: string;
+  date: string;
+  amount: number;
+  notes: string;
+  created_at: string;
+};
+
 export type CabUser = {
   id: string;
   name: string;

@@ -84,14 +84,14 @@ export default function AddExpenseScreen({ onBack }: Props) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 flex flex-col">
       {/* Header */}
-      <div className="bg-white shadow-sm px-5 pt-12 pb-4 flex items-center gap-3">
-        <button onClick={onBack} className="w-9 h-9 rounded-xl bg-gray-100 flex items-center justify-center active:bg-gray-200">
-          <ArrowLeft className="w-5 h-5 text-gray-700" />
+      <div className="bg-white dark:bg-gray-800 shadow-sm px-5 pt-12 pb-4 flex items-center gap-3">
+        <button onClick={onBack} className="w-9 h-9 rounded-xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center active:bg-gray-200">
+          <ArrowLeft className="w-5 h-5 text-gray-700 dark:text-gray-200" />
         </button>
         <div>
-          <h1 className="text-lg font-bold text-gray-900">Add Expenses</h1>
+          <h1 className="text-lg font-bold text-gray-900 dark:text-white">Add Expenses</h1>
           <p className="text-xs text-gray-400">Enter all expenses at once</p>
         </div>
       </div>
@@ -100,11 +100,11 @@ export default function AddExpenseScreen({ onBack }: Props) {
         {/* Date */}
         <div className="mt-5">
           <label className="block text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">Date</label>
-          <div className="flex items-center bg-white border border-gray-200 rounded-xl px-4 gap-3 focus-within:border-red-400 transition-colors shadow-sm">
+          <div className="flex items-center bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-xl px-4 gap-3 focus-within:border-red-400 transition-colors shadow-sm">
             <Calendar className="w-4 h-4 text-gray-400 shrink-0" />
             <input
               type="date"
-              className="flex-1 py-3.5 text-sm text-gray-800 outline-none bg-transparent"
+              className="flex-1 py-3.5 text-sm text-gray-800 dark:text-gray-200 outline-none bg-transparent"
               value={date}
               onChange={e => setDate(e.target.value)}
             />
@@ -115,21 +115,21 @@ export default function AddExpenseScreen({ onBack }: Props) {
         {/* Expense Fields */}
         <div className="mt-5">
           <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">Expenses</h2>
-          <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
+          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 overflow-hidden">
             {EXPENSE_FIELDS.map((field, idx) => {
               const Icon = field.icon;
               return (
-                <div key={field.key} className={`flex items-center px-4 py-3.5 gap-4 ${idx < EXPENSE_FIELDS.length - 1 ? 'border-b border-gray-50' : ''}`}>
-                  <div className={`w-9 h-9 bg-gray-50 rounded-xl flex items-center justify-center shrink-0`}>
+                <div key={field.key} className={`flex items-center px-4 py-3.5 gap-4 ${idx < EXPENSE_FIELDS.length - 1 ? 'border-b border-gray-50 dark:border-gray-700' : ''}`}>
+                  <div className={`w-9 h-9 bg-gray-50 dark:bg-gray-700 rounded-xl flex items-center justify-center shrink-0`}>
                     <Icon className={`w-5 h-5 ${field.color}`} />
                   </div>
-                  <span className="flex-1 text-sm font-medium text-gray-700">{field.label}</span>
+                  <span className="flex-1 text-sm font-medium text-gray-700 dark:text-gray-200">{field.label}</span>
                   <div className="flex items-center gap-1">
                     <span className="text-gray-400 text-sm">₹</span>
                     <input
                       type="number"
                       inputMode="decimal"
-                      className="w-24 text-right text-sm font-bold text-gray-800 outline-none bg-transparent border-b-2 border-gray-100 focus:border-red-400 transition-colors py-1"
+                      className="w-24 text-right text-sm font-bold text-gray-800 dark:text-gray-200 outline-none bg-transparent border-b-2 border-gray-100 dark:border-gray-600 focus:border-red-400 transition-colors py-1"
                       placeholder="0"
                       value={expenses[field.key]}
                       onChange={e => setExpenses(prev => ({ ...prev, [field.key]: e.target.value }))}
@@ -153,7 +153,7 @@ export default function AddExpenseScreen({ onBack }: Props) {
       </div>
 
       {/* Save Button */}
-      <div className="px-5 pb-10 pt-4 bg-gray-50">
+      <div className="px-5 pb-10 pt-4 bg-gray-50 dark:bg-gray-900">
         <button
           onClick={handleSave}
           disabled={loading || saved}
