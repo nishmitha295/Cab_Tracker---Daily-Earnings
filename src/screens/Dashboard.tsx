@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, TrendingDown, DollarSign, Plus, History, BarChart2, Bell } from 'lucide-react';
+import { TrendingUp, TrendingDown, DollarSign, History, Bell, LogOut } from 'lucide-react';
 import { supabase, DailyEntry, totalExpense, profit, formatCurrency, formatDate, todayISO } from '@/lib/supabase';
 import { useAuth } from '@/context/AuthContext';
 
@@ -10,7 +10,7 @@ type Props = {
 };
 
 export default function Dashboard({ onNavigate }: Props) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const [entry, setEntry] = useState<DailyEntry | null>(null);
   const [weekSummary, setWeekSummary] = useState({ income: 0, expenses: 0, profit: 0 });
   const [loading, setLoading] = useState(true);
@@ -63,9 +63,14 @@ export default function Dashboard({ onNavigate }: Props) {
             <p className="text-xs text-gray-400 font-medium">Good {getGreeting()},</p>
             <h1 className="text-xl font-bold text-gray-900">{user?.name}</h1>
           </div>
-          <button className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
-            <Bell className="w-5 h-5 text-gray-500" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button className="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+              <Bell className="w-5 h-5 text-gray-500" />
+            </button>
+            <button onClick={logout} className="w-10 h-10 bg-red-50 rounded-full flex items-center justify-center active:bg-red-100">
+              <LogOut className="w-5 h-5 text-red-500" />
+            </button>
+          </div>
         </div>
         <div className="mt-2 flex items-center gap-2">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
