@@ -84,7 +84,7 @@ export default function LoginScreen() {
                 <User className="w-4 h-4 text-gray-400 shrink-0" />
                 <input
                   className="flex-1 py-3 text-sm outline-none bg-transparent"
-                  placeholder="e.g. Ramesh Kumar"
+                  placeholder="Enter your name"
                   value={name}
                   onChange={e => setName(e.target.value)}
                 />
@@ -96,7 +96,7 @@ export default function LoginScreen() {
                 <Phone className="w-4 h-4 text-gray-400 shrink-0" />
                 <input
                   className="flex-1 py-3 text-sm outline-none bg-transparent"
-                  placeholder="9876543210"
+                  placeholder="Enter your phone number"
                   value={phone}
                   onChange={e => setPhone(e.target.value)}
                   type="tel"
